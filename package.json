@@ -1,0 +1,18 @@
+{
+  "name": "net-abort",
+  "version": "0.0.0-experimental",
+  "description": "Add force-close (sending RST) support to net.Socket.",
+  "main": "lib/net-abort.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "TCP",
+    "RST",
+    "abort",
+    "shutdown",
+    "shutdown(2)"
+  ],
+  "author": "Atsushi Suzuki",
+  "license": "ISC"
+}
