@@ -3,6 +3,11 @@
 #include <tcp_wrap.h>
 #include <v8.h>
 
+#ifdef WIN32
+#else
+	#include <unistd.h>
+#endif
+
 using namespace node;
 using namespace v8;
 
@@ -17,7 +22,10 @@ Handle<Value> Abort(const Arguments& args) {
 	assert(setsockopt(socket, SOL_SOCKET, SO_LINGER, (char *)&val, sizeof(val)) == 0);
 	assert(closesocket(socket) == 0);
 #else
-	#error "Not implemented yet"
+	int fd = wrap->UVHandle()->io_watcher.fd;
+	linger val = { 1, 0 };
+	assert(setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *)&val, sizeof(val)) == 0);
+	assert(close(fd) == 0);
 #endif
 	
 	return Null();
