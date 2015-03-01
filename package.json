@@ -1,6 +1,9 @@
 {
   "name": "net-abort",
-  "version": "0.0.0-experimental",
+  "version": "0.0.1-experimental",
+  "engines": {
+    "node": ">=0.10 <0.11"
+  },
   "description": "Add force-close (sending RST) support to net.Socket.",
   "main": "lib/net-abort.js",
   "scripts": {
