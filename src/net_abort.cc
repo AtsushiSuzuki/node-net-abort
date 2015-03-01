@@ -20,7 +20,7 @@ using namespace v8;
  * @this TCP
  */
 void Abort(const FunctionCallbackInfo<Value>& args) {
-	auto isolate = Isolate::GetCurrent();
+	Isolate *isolate = Isolate::GetCurrent();
 	HandleScope scope(isolate);
 
 	// TODO: type check
@@ -41,12 +41,10 @@ void Abort(const FunctionCallbackInfo<Value>& args) {
 	int fd = wrap->UVHandle()->io_watcher.fd;
 	linger val = { 1, 0 };
 	if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *)&val, sizeof(val)) != 0) {
-		ThrowException(ErrnoException(errno, "setsockopt"));
-		return scope.Close(Undefined());
+		isolate->ThrowException(ErrnoException(errno, "setsockopt"));
 	}
 	if (close(fd) != 0) {
-		ThrowException(ErrnoException(errno, "close"));
-		return scope.Close(Undefined());
+		isolate->ThrowException(ErrnoException(errno, "close"));
 	}
 #endif
 }
