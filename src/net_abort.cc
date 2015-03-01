@@ -19,23 +19,23 @@ using namespace v8;
  * Emit an RST packet and close socket.
  * @this TCP
  */
-Handle<Value> Abort(const Arguments& args) {
-	HandleScope scope;
-	
+void Abort(const FunctionCallbackInfo<Value>& args) {
+	auto isolate = Isolate::GetCurrent();
+	HandleScope scope(isolate);
+
 	// TODO: type check
-	
-	UNWRAP(TCPWrap)
-	
+	TCPWrap* wrap = Unwrap<TCPWrap>(args.Holder());
+
 #ifdef WIN32
 	SOCKET socket = wrap->UVHandle()->socket;
 	linger val = { 1, 0 };
 	if (setsockopt(socket, SOL_SOCKET, SO_LINGER, (char *)&val, sizeof(val)) != 0) {
-		ThrowException(WinapiErrnoException(WSAGetLastError(), "setsockopt"));
-		return scope.Close(Undefined());
+		isolate->ThrowException(WinapiErrnoException(WSAGetLastError(), "setsockopt"));
+		return;
 	}
 	if (closesocket(socket) != 0) {
-		ThrowException(WinapiErrnoException(WSAGetLastError(), "closesocket"));
-		return scope.Close(Undefined());
+		isolate->ThrowException(WinapiErrnoException(WSAGetLastError(), "closesocket"));
+		return;
 	}
 #else
 	int fd = wrap->UVHandle()->io_watcher.fd;
@@ -49,8 +49,6 @@ Handle<Value> Abort(const Arguments& args) {
 		return scope.Close(Undefined());
 	}
 #endif
-	
-	return scope.Close(Undefined());
 }
 
 /**
@@ -58,13 +56,12 @@ Handle<Value> Abort(const Arguments& args) {
  * @param {Handle<Object>} exports - Module object
  */
 void init(Handle<Object> exports) {
-	exports->Set(String::NewSymbol("abort"),
-		FunctionTemplate::New(Abort)->GetFunction());
+	NODE_SET_METHOD(exports, "abort", Abort);
 }
 
 // HACK: no TCPWrap::UVHandle in node.lib
 uv_tcp_t* TCPWrap::UVHandle() {
-  return &handle_;
+	return &handle_;
 }
 
 /**
