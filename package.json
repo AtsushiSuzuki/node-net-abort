@@ -10,7 +10,8 @@
     "test": "mocha"
   },
   "devDependencies": {
-    "async": "*"
+    "async": "*",
+    "mocha": "*"
   },
   "keywords": [
     "TCP",
