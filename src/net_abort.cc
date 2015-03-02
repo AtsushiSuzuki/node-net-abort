@@ -1,7 +1,7 @@
 #include <node.h>
-#include <node_internals.h>
 #include <tcp_wrap.h>
 #include <v8.h>
+#include <nan.h>
 
 #ifdef WIN32
 	#include <winsock2.h>
@@ -19,34 +19,37 @@ using namespace v8;
  * Emit an RST packet and close socket.
  * @this TCP
  */
-void Abort(const FunctionCallbackInfo<Value>& args) {
-	Isolate *isolate = Isolate::GetCurrent();
-	HandleScope scope(isolate);
+NAN_METHOD(Abort) {
+	NanScope();
 
 	// TODO: type check
-	TCPWrap* wrap = Unwrap<TCPWrap>(args.Holder());
+	TCPWrap* wrap = (TCPWrap *)NanGetInternalFieldPointer(args.Holder(), 0);
 
 #ifdef WIN32
 	SOCKET socket = wrap->UVHandle()->socket;
 	linger val = { 1, 0 };
 	if (setsockopt(socket, SOL_SOCKET, SO_LINGER, (char *)&val, sizeof(val)) != 0) {
-		isolate->ThrowException(WinapiErrnoException(WSAGetLastError(), "setsockopt"));
-		return;
+		NanThrowError(WinapiErrnoException(WSAGetLastError(), "setsockopt"));
+		NanReturnUndefined();
 	}
 	if (closesocket(socket) != 0) {
-		isolate->ThrowException(WinapiErrnoException(WSAGetLastError(), "closesocket"));
-		return;
+		NanThrowError(WinapiErrnoException(WSAGetLastError(), "closesocket"));
+		NanReturnUndefined();
 	}
 #else
 	int fd = wrap->UVHandle()->io_watcher.fd;
 	linger val = { 1, 0 };
 	if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *)&val, sizeof(val)) != 0) {
-		isolate->ThrowException(ErrnoException(errno, "setsockopt"));
+		NanThrowError(ErrnoException(errno, "setsockopt"));
+		NanReturnUndefined();
 	}
 	if (close(fd) != 0) {
-		isolate->ThrowException(ErrnoException(errno, "close"));
+		NanThrowError(ErrnoException(errno, "close"));
+		NanReturnUndefined();
 	}
 #endif
+
+	NanReturnUndefined();
 }
 
 /**
@@ -54,7 +57,7 @@ void Abort(const FunctionCallbackInfo<Value>& args) {
  * @param {Handle<Object>} exports - Module object
  */
 void init(Handle<Object> exports) {
-	NODE_SET_METHOD(exports, "abort", Abort);
+	exports->Set(NanNew<String>("abort"), NanNew<FunctionTemplate>(Abort)->GetFunction());
 }
 
 // HACK: no TCPWrap::UVHandle in node.lib

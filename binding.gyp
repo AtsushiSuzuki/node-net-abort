@@ -3,6 +3,7 @@
     {
       "target_name": "net_abort",
       "include_dirs": [
+      	"<!(node -e \"require('nan')\")",
       	"<(node_root_dir)/deps/cares/include",
       	"<(node_root_dir)/deps/debugger-agent/include"
       ],
